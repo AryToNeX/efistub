@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# defaults lol
+ESPDIR="/boot"
+USE_PROC_CMDLINE=true
+CMDLINE_EXTRAS="quiet splash loglevel=3"
+
+[ -f /etc/default/efistub ] && source /etc/default/efistub || true
+
+if [ $UID -ne 0 ]; then
+	echo "Please run this as superuser."
+	exit 1
+fi
+
+_disk=$(lsblk -npo pkname $(findmnt -n -o SOURCE --target "$ESPDIR"))
+_part=$(findmnt -n -o SOURCE --target "$ESPDIR" | tr -d '\n' | tail -c 1)
+_root_mountpoint=$(findmnt -n -o SOURCE --target /)
+_root_partuuid=$(eval $(blkid -o export -s PARTUUID "$_root_mountpoint"); echo $PARTUUID)
+_label=$(source /etc/os-release >/dev/null 2>&1; echo $NAME)
+_bootnum=$(efibootmgr | grep "$_label" | cut -d ' ' -f 1 | grep -o -E "([0-9]*)")
+
+if [ -n "$_root_partuuid" ]; then
+	_root="PARTUUID=\"$_root_partuuid\""
+else
+	_root="$_root_mountpoint"
+fi
+
+if [ "$USE_PROC_CMDLINE" = "true" ]; then
+	_cmdline=$(cat /proc/cmdline)
+else	
+	_cmdline="root=$_root rw initrd=\\initramfs-linux.img"
+	if [ -n "$CMDLINE_EXTRAS" ]; then
+		 _cmdline="$_cmdline $CMDLINE_EXTRAS"
+	fi
+fi
+
+if [ -n "$_bootnum" ]; then
+	efibootmgr -b $_bootnum -B --verbose
+fi
+
+efibootmgr --create --disk "$_disk" --part "$_part" --label "$_label" --loader "/vmlinuz-linux" --unicode "$_cmdline" --verbose

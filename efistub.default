@@ -1,0 +1,12 @@
+# EFISTUB configuration
+# Modify those variables to mirror your configuration
+
+# Mount point of the EFI System Partition
+ESPDIR="/boot"
+
+# Prefer to stick with the current Linux command line arguments
+USE_PROC_CMDLINE=false
+
+# Extra Linux command line arguments
+# This only works when USE_PROC_CMDLINE is set to false
+CMDLINE_EXTRAS="quiet splash vga=current loglevel=3 vt.global_cursor_default=0"
