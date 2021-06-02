@@ -19,16 +19,34 @@ _root_partuuid=$(eval $(blkid -o export -s PARTUUID "$_root_mountpoint"); echo $
 _label=$(source /etc/os-release >/dev/null 2>&1; echo $NAME)
 _bootnum=$(efibootmgr | grep "$_label" | cut -d ' ' -f 1 | grep -o -E "([0-9]*)")
 
+_cpu=$(cat /proc/cpuinfo | grep "vendor_id" | uniq | tr -d " \t" | cut -d ":" -f 2)
+_ucode=""
+
+case $_cpu in
+	AuthenticAMD)
+		_ucode="amd-ucode.img"
+		;;
+	GenuineIntel)
+		_ucode="intel-ucode.img"
+		;;
+esac
+
 if [ -n "$_root_partuuid" ]; then
 	_root="PARTUUID=\"$_root_partuuid\""
 else
 	_root="$_root_mountpoint"
 fi
 
+if [ -n "$_ucode" -a -f "$ESPDIR/$_ucode" ]; then
+	_initrd="initrd=\\$_ucode initrd=\\initramfs-linux.img"
+else
+	_initrd="initrd=\\initramfs-linux.img"
+fi
+
 if [ "$USE_PROC_CMDLINE" = "true" ]; then
 	_cmdline=$(cat /proc/cmdline)
-else	
-	_cmdline="root=$_root rw initrd=\\initramfs-linux.img"
+else
+	_cmdline="root=$_root rw $_initrd"
 	if [ -n "$CMDLINE_EXTRAS" ]; then
 		 _cmdline="$_cmdline $CMDLINE_EXTRAS"
 	fi
