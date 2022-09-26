@@ -1,7 +1,7 @@
 #!/bin/sh 
 
-curl -o /usr/bin/efistub "https://raw.githubusercontent.com/AryToNeX/efistub/master/efistub"
-curl -o /etc/default/efistub "https://raw.githubusercontent.com/AryToNeX/efistub/master/efistub.default"
+curl -o /usr/bin/efistub "https://raw.githubusercontent.com/NyaomiDEV/efistub/master/efistub"
+curl -o /etc/default/efistub "https://raw.githubusercontent.com/NyaomiDEV/efistub/master/efistub.default"
 
 chmod +x /usr/bin/efistub
 
